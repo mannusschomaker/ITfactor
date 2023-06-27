@@ -6,7 +6,7 @@ import numpy as np
 # Loading data
 @st.cache_data
 def load_data():
-    results_df = pd.read_csv('firm_data/results.csv')  # replace with path to your data
+    results_df = pd.read_csv('results.csv')  # replace with path to your data
     return results_df
 
 # Function to create spider plot

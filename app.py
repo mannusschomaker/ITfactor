@@ -100,8 +100,9 @@ def main():
     # if filtered_df.shape[0] < 1:
     #     return
 
-        
-    distances = results_df.apply(lambda row: distance.euclidean(row[6:], results_df[results_df['Firm'] == selected_firm].iloc[0][6:]), axis=1)
+    if values:
+        results_df = results_df[results_df["Number_of_Lawyers"].between(values[0], values[1])]    
+    distances = results_df.apply(lambda row: distance.euclidean(row[6:], firm_data[6:]), axis=1)
     if results_df.shape[0] > 4:
         number_of_firms = 4
         similar_firms = distances.nsmallest(number_of_firms)

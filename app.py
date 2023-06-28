@@ -86,7 +86,8 @@ def main():
     st.pyplot(create_spider_plot(firm_data, rechtsgebieden_data,selected_firm))
     st.markdown('Verder kan er op dezelfde wijze naar de senioriteit van de advocaten binnen het geselecteerde kantoor worden gekeken. De advocaten zijn onderverdeeld in vier categorieën gebaseerd op hun beëdigingsdatum: 0-3 jaar, 3-6 jaar, 6-10 jaar en langer dan 10 jaar. De verdeling van deze categorieën verschaft inzicht in de ervaringsniveaus binnen het kantoor. Een grotere hoeveelheid advocaten met een langere beëdigingsdatum kan bijvoorbeeld duiden op een kantoor met meer ervaring en stabiliteit.')
     st.pyplot(create_pie_chart(beedigings_data,selected_firm,beedigings_cats))
-    st.markdown('Tenslotte wordt de data van de spiderplot genormaliseerd met behulp van de min-max normalisatie. Deze techniek transformeert de initiële ruwe data naar een gestandaardiseerd bereik, wat het mogelijk maakt om advocatenkantoren op een eerlijke wijze met elkaar te vergelijken. Met de genormaliseerde data, kan vervolgens de Euclidische afstand worden berekend om de meest vergelijkbare kantoren te identificeren. Hierdoor kunnen kantoren op een objectieve manier worden vergeleken, ongeacht hun omvang of het aantal beoefende rechtsgebieden.')
+    st.markdown('Tenslotte wordt de data van de spiderplot genormaliseerd met behulp van de min-max normalisatie. Deze techniek transformeert de initiële ruwe data naar een gestandaardiseerd bereik, wat het mogelijk maakt om advocatenkantoren op een eerlijke wijze met elkaar te vergelijken. Met de genormaliseerde data, kan vervolgens de KL divergence worden berekend om de meest vergelijkbare kantoren te identificeren. Hierdoor kunnen kantoren op een objectieve manier worden vergeleken, ongeacht hun omvang of het aantal beoefende rechtsgebieden.')
+    
     results_df["Number_of_Lawyers"] = results_df["Number_of_Lawyers"].astype(int)
     min_laywers = results_df["Number_of_Lawyers"].min()
     max_laywers = results_df["Number_of_Lawyers"].max() 
@@ -125,6 +126,23 @@ def main():
 
         st.pyplot(create_spider_plot(firm_data, rechtsgebieden_data,row['Firm']))
         st.markdown(f"De Euclidische afstand tussen {selected_firm} en {row['Firm']} is {similar_firms.iloc[i]}")    
+st.markdown('KL divergentie is een maat voor hoe een waarschijnlijkheidsverdeling afwijkt van een tweede, verwachte waarschijnlijkheidsverdeling. In tegenstelling tot Euclidische afstand is KL divergentie niet symmetrisch, wat betekent dat KL(P||Q) niet gelijk is aan KL(Q||P). Deze maat wordt gebruikt in velden als informatietheorie en machine learning om de "afstand" tussen twee waarschijnlijkheidsverdelingen te meten.
+
+De KL divergentie van twee discrete waarschijnlijkheidsverdelingen P en Q is gegeven door:
+
+∑ P(i) log(P(i)/Q(i)) voor alle i
+
+De Kullback-Leibler divergentie heeft zijn wortels in de informatietheorie en geeft vaak relevantere resultaten bij het vergelijken van waarschijnlijkheden.
+
+Dus, de belangrijkste verschillen zijn:
+
+Euclidische afstand is symmetrisch (de afstand van A naar B is hetzelfde als van B naar A), terwijl KL divergentie dat niet is.
+
+Euclidische afstand is een maat voor daadwerkelijke afstand in ruimte, terwijl KL divergentie een maat is voor het verschil tussen twee waarschijnlijkheidsverdelingen.
+
+KL divergentie is een toepasselijker maat bij het omgaan met waarschijnlijkheden omdat het rekening houdt met de onzekerheid van gebeurtenissen, terwijl Euclidische afstand dat niet doet.
+
+In de context van het vergelijken van rechtsgebieden tussen verschillende kantoren, kan KL divergentie relevanter zijn dan de Euclidische afstand omdat het rekening houdt met de "verdeling" van de rechtsgebieden. Als een kantoor bijvoorbeeld een bepaald rechtsgebied domineert en een ander kantoor dat niet doet, dan zal de KL divergentie dit verschil in verdeling herkennen, terwijl de Euclidische afstand dat niet noodzakelijkerwijs doet. Het geeft dus een dieper inzicht in de overeenkomsten en verschillen tussen de specialiteiten van verschillende kantoren.')
 
 if __name__ == "__main__":
     main()

@@ -27,15 +27,25 @@ def create_spider_plot(firm_data, rechtsgebieden_data,selected_firm):
     plt.title(selected_firm, y=0.5)
     return fig
 
-# Function to create bar plot
-def create_bar_plot(firm_data, beedigings_data,selected_firm,beedigings_cats):
+# Function to create pie chart
+def create_pie_chart(beedigings_data, selected_firm, beedigings_cats):
     fig, ax = plt.subplots()
-    beedigings_data.plot(kind='bar', color='skyblue', ax=ax)
+    #colors
+    colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99']
+    explode = (0.05,0.05,0.05,0.05)
+    beedigings_data.plot(kind='pie', colors = colors, labels=['> 10 years ago', '6-10 years ago', '3-6 years ago', '< 3 years ago'], ax=ax,startangle=90, pctdistance=0.85, explode = explode)
+    centre_circle = plt.Circle((0,0),0.70,fc='white')
+    fig = plt.gcf()
+    fig.gca().add_artist(centre_circle)
     plt.title(f'Beëdigingsdatum categories for {selected_firm}')
-    plt.ylabel('Count')
-    plt.xlabel('Beëdigingsdatum category')
-    plt.xticks(range(len(beedigings_cats)), ['> 10 years ago', '6-10 years ago', '3-6 years ago', '< 3 years ago'])
+    plt.ylabel('')
+    # plt.legend(title="Categories", loc="upper right",ncol=4)
+    ax.axis('equal')  
+    plt.tight_layout()
     return fig
+
+
+
 
 # Main part of the app
 def main():
@@ -45,7 +55,7 @@ def main():
 
     # Create a dropdown to select firm
     firms = np.sort(results_df['Firm'].unique().tolist())
-    selected_firm = "Van Doorne N.V."
+    # selected_firm = "Van Doorne N.V."
     selected_firm = st.selectbox('Select a firm:', firms)
     all_rechtsgebieden = results_df.columns[6:] 
 
@@ -54,7 +64,7 @@ def main():
 
     # Get data for the selected firm
     firm_data = results_df[results_df['Firm'] == selected_firm].iloc[0]
-    distances = results_df.apply(lambda row: distance.euclidean(row[6:], firm_data[6:]), axis=1)
+    
     
     # For spider plot
     rechtsgebieden_data = firm_data[all_rechtsgebieden]
@@ -75,39 +85,45 @@ def main():
     # Draw plots
     st.pyplot(create_spider_plot(firm_data, rechtsgebieden_data,selected_firm))
     st.markdown('Verder kan er op dezelfde wijze naar de senioriteit van de advocaten binnen het geselecteerde kantoor worden gekeken. De advocaten zijn onderverdeeld in vier categorieën gebaseerd op hun beëdigingsdatum: 0-3 jaar, 3-6 jaar, 6-10 jaar en langer dan 10 jaar. De verdeling van deze categorieën verschaft inzicht in de ervaringsniveaus binnen het kantoor. Een grotere hoeveelheid advocaten met een langere beëdigingsdatum kan bijvoorbeeld duiden op een kantoor met meer ervaring en stabiliteit.')
-    st.pyplot(create_bar_plot(firm_data, beedigings_data,selected_firm,beedigings_cats))
-    st.markdown('Tenslotte wordt de data van de spiderplot genormaliseerd met behulp van de min-max normalisatie. Deze techniek transformeert de initiële ruwe data naar een gestandaardiseerd bereik, wat het mogelijk maakt om advocatenkantoren op een eerlijke wijze met elkaar te vergelijken. Met de genormaliseerde data, kan vervolgens Kullback–Leibler divergence worden berekend om de meest vergelijkbare kantoren te identificeren. Hierdoor kunnen kantoren op een objectieve manier worden vergeleken, ongeacht hun omvang of het aantal beoefende rechtsgebieden.')
-    similar_firms = distances.nsmallest(10)
-    row = results_df.loc[similar_firms.index[1]]
-    # For spider plot
-    rechtsgebieden_data = row[all_rechtsgebieden]
-    rechtsgebieden_data = rechtsgebieden_data[rechtsgebieden_data > 0]
-    rechtsgebieden_data = rechtsgebieden_data.drop('Niet bekend', errors='ignore')
-    rechtsgebieden_data = rechtsgebieden_data.astype(float)
-    rechtsgebieden_data = rechtsgebieden_data.nlargest(10)
+    st.pyplot(create_pie_chart(beedigings_data,selected_firm,beedigings_cats))
+    st.markdown('Tenslotte wordt de data van de spiderplot genormaliseerd met behulp van de min-max normalisatie. Deze techniek transformeert de initiële ruwe data naar een gestandaardiseerd bereik, wat het mogelijk maakt om advocatenkantoren op een eerlijke wijze met elkaar te vergelijken. Met de genormaliseerde data, kan vervolgens de Euclidische afstand worden berekend om de meest vergelijkbare kantoren te identificeren. Hierdoor kunnen kantoren op een objectieve manier worden vergeleken, ongeacht hun omvang of het aantal beoefende rechtsgebieden.')
+    results_df["Number_of_Lawyers"] = results_df["Number_of_Lawyers"].astype(int)
+    min_laywers = results_df["Number_of_Lawyers"].min()
+    max_laywers = results_df["Number_of_Lawyers"].max() 
+        
+    # st.markdown(values)
+    values = st.slider(
+        'Select a range of values',
+        int(min_laywers), int(max_laywers), (int(min_laywers), int(max_laywers)))
+    # filtered_df = results_df[(results_df["Number_of_Lawyers"] >= values[0]) & (results_df["Number_of_Lawyers"] <= values[0])].copy()
+    # st.markdown(str(filtered_df.shape[0])+" kantoren voldoen aan de criteria")
+    # if filtered_df.shape[0] < 1:
+    #     return
 
-    st.pyplot(create_spider_plot(firm_data, rechtsgebieden_data,row['Firm']))
-
-    row = results_df.loc[similar_firms.index[2]]
-    # For spider plot
-    rechtsgebieden_data = row[all_rechtsgebieden]
-    rechtsgebieden_data = rechtsgebieden_data[rechtsgebieden_data > 0]
-    rechtsgebieden_data = rechtsgebieden_data.drop('Niet bekend', errors='ignore')
-    rechtsgebieden_data = rechtsgebieden_data.astype(float)
-    rechtsgebieden_data = rechtsgebieden_data.nlargest(10)
-
-    st.pyplot(create_spider_plot(firm_data, rechtsgebieden_data,row['Firm']))
-
-    row = results_df.loc[similar_firms.index[3]]
+        
+    distances = results_df.apply(lambda row: distance.euclidean(row[6:], results_df[results_df['Firm'] == selected_firm].iloc[0][6:]), axis=1)
+    if results_df.shape[0] > 4:
+        number_of_firms = 4
+        similar_firms = distances.nsmallest(number_of_firms)
+    else:
+        number_of_firms = results_df.shape[0]
+        similar_firms = distances.nsmallest(number_of_firms)
     
-    # For spider plot
-    rechtsgebieden_data = row[all_rechtsgebieden]
-    rechtsgebieden_data = rechtsgebieden_data[rechtsgebieden_data > 0]
-    rechtsgebieden_data = rechtsgebieden_data.drop('Niet bekend', errors='ignore')
-    rechtsgebieden_data = rechtsgebieden_data.astype(float)
-    rechtsgebieden_data = rechtsgebieden_data.nlargest(10)
+    for i in range(number_of_firms):
+        if i == 0:
+            st.markdown(f"De meest vergelijkbare kantoren met {selected_firm} zijn:")
+            continue
 
-    st.pyplot(create_spider_plot(firm_data, rechtsgebieden_data,row['Firm']))
+        row = results_df.loc[similar_firms.index[i]]
+        # For spider plot
+        rechtsgebieden_data = row[all_rechtsgebieden]
+        rechtsgebieden_data = rechtsgebieden_data[rechtsgebieden_data > 0]
+        rechtsgebieden_data = rechtsgebieden_data.drop('Niet bekend', errors='ignore')
+        rechtsgebieden_data = rechtsgebieden_data.astype(float)
+        rechtsgebieden_data = rechtsgebieden_data.nlargest(10)
+
+        st.pyplot(create_spider_plot(firm_data, rechtsgebieden_data,row['Firm']))
+        st.markdown(f"De Euclidische afstand tussen {selected_firm} en {row['Firm']} is {similar_firms.iloc[i]}")    
 
 if __name__ == "__main__":
     main()
